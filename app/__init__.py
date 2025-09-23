@@ -1,0 +1,30 @@
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
+
+# Initialize extensions
+db = SQLAlchemy()
+login_manager = LoginManager()
+
+def create_app():
+    app = Flask(__name__)
+
+    # Config
+    app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("SQLALCHEMY_DATABASE_URI")
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    # Init extensions
+    db.init_app(app)
+    login_manager.init_app(app)
+
+    # Import and register blueprint (FIXED)
+    from app.routes import main
+    app.register_blueprint(main)
+
+    return app
