@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>New Food Post</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        .container { max-width: 500px; margin: auto; }
+        form { display: flex; flex-direction: column; }
+        input, textarea, button { margin: 10px 0; padding: 10px; }
+        .flash { padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .flash.success { background-color: #d4edda; color: #155724; }
+        .flash.danger { background-color: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Create New Food Post</h2>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <label>{{ form.title.label }}</label>
+            {{ form.title(size=50) }}
+
+            <label>{{ form.description.label }}</label>
+            {{ form.description(rows=4, cols=50) }}
+
+            <label>{{ form.quantity.label }}</label>
+            {{ form.quantity(size=20) }}
+
+            <label>{{ form.pickup_time.label }}</label>
+            {{ form.pickup_time(size=20) }}
+
+            {{ form.submit() }}
+        </form>
+
+        <a href="{{ url_for('main.dashboard') }}">Back to Dashboard</a>
+    </div>
+</body>
+</html>

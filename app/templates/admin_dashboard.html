@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Panel - Food Rescue Platform</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 50px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        a.button { padding: 5px 10px; background-color: #28a745; color: white; text-decoration: none; border-radius: 3px; }
+        a.button.disabled { background-color: #ccc; pointer-events: none; }
+    </style>
+</head>
+<body>
+    <h2>Admin Panel - Manage Users</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <table>
+        <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Verified</th>
+            <th>Action</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td>{{ 'Yes' if user.is_verified else 'No' }}</td>
+            <td>
+                {% if user.role == 'organization' and not user.is_verified %}
+                    <a href="{{ url_for('main.verify_user', user_id=user.id) }}" class="button">Verify</a>
+                {% else %}
+                    <span class="button disabled">Verify</span>
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <a href="{{ url_for('main.dashboard') }}">Back to Dashboard</a>
+</body>
+</html>

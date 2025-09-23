@@ -10,6 +10,7 @@ load_dotenv()
 # Initialize extensions
 db = SQLAlchemy()
 login_manager = LoginManager()
+login_manager.login_message_category = "info"  # Flash message category
 
 def create_app():
     app = Flask(__name__)
@@ -23,7 +24,10 @@ def create_app():
     db.init_app(app)
     login_manager.init_app(app)
 
-    # Import and register blueprint (FIXED)
+    # Set the login view for @login_required
+    login_manager.login_view = "main.login"
+
+    # Import and register blueprint
     from app.routes import main
     app.register_blueprint(main)
 
