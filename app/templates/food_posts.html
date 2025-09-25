@@ -12,6 +12,10 @@
         .flash { padding: 10px; margin-bottom: 10px; border-radius: 5px; }
         .flash.success { background-color: #d4edda; color: #155724; }
         .flash.danger { background-color: #f8d7da; color: #721c24; }
+        .flash.warning { background-color: #fff3cd; color: #856404; }
+        .btn { display: inline-block; padding: 8px 12px; margin-top: 10px;
+               background-color: #007BFF; color: white; border-radius: 4px; }
+        .btn.disabled { background-color: #6c757d; pointer-events: none; }
     </style>
 </head>
 <body>
@@ -35,6 +39,26 @@
                     <p><strong>Pickup Time:</strong> {{ post.pickup_time }}</p>
                     {% if post.description %}
                         <p><strong>Description:</strong> {{ post.description }}</p>
+                    {% endif %}
+
+                    <p><strong>Status:</strong> {{ post.status }}</p>
+
+                    {% if post.status == "claimed" %}
+                        <p><strong>Claimed By:</strong>
+                            {% if post.claimer %}
+                                {{ post.claimer.name }}
+                            {% else %}
+                                (Unknown)
+                            {% endif %}
+                        </p>
+                    {% endif %}
+
+                    {% if current_user.is_authenticated and current_user.role == "organization" %}
+                        {% if post.status == "available" %}
+                            <a href="{{ url_for('main.claim_food', post_id=post.id) }}" class="btn">Claim</a>
+                        {% else %}
+                            <span class="btn disabled">Already Claimed</span>
+                        {% endif %}
                     {% endif %}
                 </div>
             {% endfor %}

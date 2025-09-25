@@ -139,3 +139,22 @@ def verify_user(user_id):
         db.session.commit()
         flash(f"✅ {user.name} has been verified!", "success")
     return redirect(url_for("main.admin_dashboard"))
+@main.route("/food/claim/<int:post_id>")
+@login_required
+def claim_food(post_id):
+    if current_user.role != "organization":
+        flash("Only organizations can claim food.", "danger")
+        return redirect(url_for("main.view_food_posts"))
+
+    post = FoodPost.query.get_or_404(post_id)
+
+    if post.status != "available":
+        flash("This food post is no longer available.", "warning")
+        return redirect(url_for("main.view_food_posts"))
+
+    post.status = "claimed"
+    post.claimed_by = current_user.id
+    db.session.commit()
+
+    flash("You have successfully claimed this food!", "success")
+    return redirect(url_for("main.view_food_posts"))
