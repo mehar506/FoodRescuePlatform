@@ -1,18 +1,21 @@
-from flask import render_template, redirect, url_for, flash, request
+from flask import render_template, redirect, url_for, flash, request, Blueprint
 from flask_login import login_user, logout_user, login_required, current_user
 from app.forms import RegistrationForm, LoginForm, FoodPostForm
 from app.models import User, FoodPost
 from app import db
-from flask import Blueprint
 
 main = Blueprint('main', __name__)  # Blueprint
 
+# ------------------------
 # Home
+# ------------------------
 @main.route('/')
 def home():
     return "<h1>🍲 Welcome to Food Rescue Platform!</h1>"
 
+# ------------------------
 # Register
+# ------------------------
 @main.route("/register", methods=["GET", "POST"])
 def register():
     form = RegistrationForm()
@@ -38,7 +41,9 @@ def register():
         return redirect(url_for('main.login'))
     return render_template('register.html', form=form)
 
+# ------------------------
 # Login
+# ------------------------
 @main.route("/login", methods=["GET", "POST"])
 def login():
     if current_user.is_authenticated:
@@ -65,7 +70,9 @@ def login():
 
     return render_template("login.html", form=form)
 
+# ------------------------
 # Logout
+# ------------------------
 @main.route("/logout")
 @login_required
 def logout():
@@ -73,13 +80,17 @@ def logout():
     flash("👋 You have been logged out.", "info")
     return redirect(url_for("main.login"))
 
+# ------------------------
 # Dashboard
+# ------------------------
 @main.route("/dashboard")
 @login_required
 def dashboard():
     return render_template("dashboard.html", user=current_user)
 
-# Create food post (for restaurants only)
+# ------------------------
+# Create food post (restaurants only)
+# ------------------------
 @main.route("/food/new", methods=["GET", "POST"])
 @login_required
 def new_food_post():
@@ -103,18 +114,41 @@ def new_food_post():
 
     return render_template("new_food_post.html", form=form)
 
-# View all available food posts (for organizations)
+# ------------------------
+# View all food posts (available + claimed)
+# ------------------------
 @main.route("/food/posts")
 @login_required
 def view_food_posts():
-    if current_user.role != 'organization':
-        flash("Only organizations can view available food posts.", "danger")
-        return redirect(url_for('main.dashboard'))
-
-    posts = FoodPost.query.filter_by(status="available").all()
+    posts = FoodPost.query.order_by(FoodPost.created_at.desc()).all()
     return render_template("food_posts.html", posts=posts)
 
+# ------------------------
+# Claim food (organizations only)
+# ------------------------
+@main.route("/food/claim/<int:post_id>")
+@login_required
+def claim_food(post_id):
+    if current_user.role != "organization":
+        flash("Only organizations can claim food.", "danger")
+        return redirect(url_for("main.view_food_posts"))
+
+    post = FoodPost.query.get_or_404(post_id)
+
+    if post.status != "available":
+        flash("⚠️ This food post has already been claimed.", "warning")
+        return redirect(url_for("main.view_food_posts"))
+
+    post.status = "claimed"
+    post.claimed_by = current_user.id
+    db.session.commit()
+
+    flash(f"🎉 You have successfully claimed {post.title} from {post.restaurant.name}!", "success")
+    return redirect(url_for("main.view_food_posts"))
+
+# ------------------------
 # Admin dashboard
+# ------------------------
 @main.route("/admin")
 @login_required
 def admin_dashboard():
@@ -125,7 +159,9 @@ def admin_dashboard():
     users = User.query.all()
     return render_template("admin_dashboard.html", users=users)
 
-# Verify an organization
+# ------------------------
+# Verify an organization (admin only)
+# ------------------------
 @main.route("/admin/verify/<int:user_id>")
 @login_required
 def verify_user(user_id):
@@ -139,22 +175,3 @@ def verify_user(user_id):
         db.session.commit()
         flash(f"✅ {user.name} has been verified!", "success")
     return redirect(url_for("main.admin_dashboard"))
-@main.route("/food/claim/<int:post_id>")
-@login_required
-def claim_food(post_id):
-    if current_user.role != "organization":
-        flash("Only organizations can claim food.", "danger")
-        return redirect(url_for("main.view_food_posts"))
-
-    post = FoodPost.query.get_or_404(post_id)
-
-    if post.status != "available":
-        flash("This food post is no longer available.", "warning")
-        return redirect(url_for("main.view_food_posts"))
-
-    post.status = "claimed"
-    post.claimed_by = current_user.id
-    db.session.commit()
-
-    flash("You have successfully claimed this food!", "success")
-    return redirect(url_for("main.view_food_posts"))

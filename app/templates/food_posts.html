@@ -2,26 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Available Food Posts - Food Rescue Platform</title>
+    <title>All Food Posts - Food Rescue Platform</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 50px; }
+        body { font-family: Arial, sans-serif; margin: 50px; background-color: #f5f7fa; }
         .container { max-width: 800px; margin: auto; }
-        .post { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; border-radius: 5px; }
-        .post h3 { margin: 0; }
+        h2 { color: #333; }
+        .post { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .post h3 { margin: 0 0 10px; color: #007BFF; }
         a { text-decoration: none; color: #007BFF; }
         .flash { padding: 10px; margin-bottom: 10px; border-radius: 5px; }
         .flash.success { background-color: #d4edda; color: #155724; }
         .flash.danger { background-color: #f8d7da; color: #721c24; }
         .flash.warning { background-color: #fff3cd; color: #856404; }
         .btn { display: inline-block; padding: 8px 12px; margin-top: 10px;
-               background-color: #007BFF; color: white; border-radius: 4px; }
+               background-color: #007BFF; color: white; border-radius: 4px; transition: 0.2s; }
+        .btn:hover { background-color: #0056b3; }
         .btn.disabled { background-color: #6c757d; pointer-events: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>Available Food Posts</h2>
+        <h2>All Food Posts</h2>
 
+        <!-- Flash messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
@@ -30,13 +33,15 @@
             {% endif %}
         {% endwith %}
 
+        <!-- Food posts -->
         {% if posts %}
             {% for post in posts %}
                 <div class="post">
                     <h3>{{ post.title }}</h3>
                     <p><strong>Restaurant:</strong> {{ post.restaurant.name }}</p>
                     <p><strong>Quantity:</strong> {{ post.quantity }}</p>
-                    <p><strong>Pickup Time:</strong> {{ post.pickup_time }}</p>
+                     <p><strong>Pickup Time:</strong> {{ post.pickup_time }}</p>
+
                     {% if post.description %}
                         <p><strong>Description:</strong> {{ post.description }}</p>
                     {% endif %}
@@ -48,7 +53,7 @@
                             {% if post.claimer %}
                                 {{ post.claimer.name }}
                             {% else %}
-                                (Unknown)
+                                (Unknown Organization)
                             {% endif %}
                         </p>
                     {% endif %}
@@ -66,7 +71,8 @@
             <p>No food posts are available at the moment.</p>
         {% endif %}
 
-        <a href="{{ url_for('main.dashboard') }}">Back to Dashboard</a>
+        <!-- Back button -->
+        <a href="{{ url_for('main.dashboard') }}" class="btn">Back to Dashboard</a>
     </div>
 </body>
 </html>
