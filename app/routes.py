@@ -29,8 +29,13 @@ def register():
         user.set_password(form.password.data)
         db.session.add(user)
         db.session.commit()
-        flash("Account created successfully! Pending verification if you are an organization.", "success")
-        return redirect(url_for('main.home'))
+
+        if form.role.data == 'organization':
+            flash("✅ Registration successful! Your account is pending admin approval.", "warning")
+        else:
+            flash("✅ Account created successfully! You can now log in.", "success")
+
+        return redirect(url_for('main.login'))
     return render_template('register.html', form=form)
 
 # Login
@@ -42,16 +47,21 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data).first()
-        if user and user.check_password(form.password.data):
-            if user.role == 'organization' and not user.is_verified:
-                flash("Your account is not verified yet. Please wait for admin approval.", "danger")
-                return redirect(url_for("main.login"))
 
-            login_user(user)
-            flash("Login successful!", "success")
-            return redirect(url_for("main.dashboard"))
+        if user:
+            if user.check_password(form.password.data):
+                # Block unverified organizations
+                if user.role == 'organization' and not user.is_verified:
+                    flash("⚠️ Your account is pending admin approval. Please wait until verification.", "warning")
+                    return redirect(url_for("main.login"))
+
+                login_user(user)
+                flash("🎉 Login successful!", "success")
+                return redirect(url_for("main.dashboard"))
+            else:
+                flash("❌ Invalid password", "danger")
         else:
-            flash("Invalid email or password", "danger")
+            flash("❌ No account found with that email.", "danger")
 
     return render_template("login.html", form=form)
 
@@ -60,7 +70,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash("You have been logged out.", "info")
+    flash("👋 You have been logged out.", "info")
     return redirect(url_for("main.login"))
 
 # Dashboard
@@ -88,7 +98,7 @@ def new_food_post():
         )
         db.session.add(post)
         db.session.commit()
-        flash("Food post created successfully!", "success")
+        flash("✅ Food post created successfully!", "success")
         return redirect(url_for('main.dashboard'))
 
     return render_template("new_food_post.html", form=form)
@@ -101,7 +111,7 @@ def view_food_posts():
         flash("Only organizations can view available food posts.", "danger")
         return redirect(url_for('main.dashboard'))
 
-    posts = FoodPost.query.filter_by(status="available").all()  # Only show available posts
+    posts = FoodPost.query.filter_by(status="available").all()
     return render_template("food_posts.html", posts=posts)
 
 # Admin dashboard
@@ -127,5 +137,5 @@ def verify_user(user_id):
     if user and user.role == 'organization':
         user.is_verified = True
         db.session.commit()
-        flash(f"{user.name} has been verified!", "success")
+        flash(f"✅ {user.name} has been verified!", "success")
     return redirect(url_for("main.admin_dashboard"))
